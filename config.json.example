@@ -1,0 +1,53 @@
+{
+    "mysql": {
+        "username": "root",
+        "password": "your_mysql_password",
+        "host": "localhost",
+        "port": "3306",
+        "dbname": "mxm"
+    },
+    "taos": {
+        "username": "root",
+        "password": "your_taos_password",
+        "protocol": "ws",
+        "address": "localhost:6041",
+        "dbname": "mxm",
+        "param": ""
+    },
+    "tls": {
+        "cert_path": "./fullchain.pem",
+        "key_path": "./privkey.pem"
+    },
+    "mqtt": {
+        "broker": "tcp://mqtt.example.com:1883",
+        "clientid": "mxm_mqtt_client_id",
+        "username": "mqtt_username",
+        "password": "mqtt_password"
+    },
+    "jt808_url": "http://localhost:8008/device/"
+    "trial_device_id": "1234567890",
+    "jwt_issuer": "your-domain.com",
+    "api_key": "your-secure-api-key-here",
+    "log_level": "INFO",
+    "tx_max_loc_net_qps": 2,
+    "tx_max_geocoder_qps": 100,
+    "wz_max_loc_net_qps": 1,
+    "tx_app_key": "your-tencent-map-api-key",
+    "wayz_app_key": "your-wayz-api-key",
+    "server_port": 8443,
+    "app_id": "your-wechat-app-id",
+    "app_secret": "your-wechat-app-secret",
+    "jwt_key_path": "./jwt_private.key",
+    "data_path": "./data",
+    "avatar_path": "./avatars",
+    "wechat_payment": {
+        "wechatpay_public_key_id": "your-wechatpay-public-key-id",
+        "wechatpay_public_key_path": "./wechatpay_pub_key.pem",
+        "app_id": "your-wechat-app-id",
+        "mch_id": "your-merchant-id",
+        "mch_certificate_serial": "your-certificate-serial",
+        "mch_private_key_path": "./cert/apiclient_key.pem",
+        "notify_url": "https://your-domain.com:8443/api/v1/devices/{device_id}/paysuccess",
+        "mch_apiv3_key": "your-wechat-pay-v3-key"
+    }
+}
