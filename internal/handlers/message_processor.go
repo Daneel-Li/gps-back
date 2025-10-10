@@ -25,32 +25,32 @@ func (mp *MessageProcessor) Process(status *mxm.DeviceStatus1) error {
 	if status == nil {
 		return fmt.Errorf("status is nil")
 	}
-	// 这里包含标准化处理流程:
-	// 1. 消息解析
-	// 2. 数据校验
-	// 3. 状态转换
-	// 4. 业务事件触发
+	// This contains standardized processing flow:
+	// 1. Message parsing
+	// 2. Data validation
+	// 3. Status conversion
+	// 4. Business event triggering
 
-	// 首先对标上device记录
+	// First match with device record
 	devID, err := mp.repo.GetDeviceIDByOriginSN(status.OriginSN, status.Type)
 	if err != nil {
 		slog.Error("handle status failed", "error", err, "status", status)
 		return fmt.Errorf("get device failed: %v", err)
 	}
 
-	// 更新历史数据表，作为原始交互数据，不管是位置更新，心跳还是指令，都存下来备用
+	// Update history data table, as raw interaction data, whether position update, heartbeat or command, all stored for backup
 	if err := mp.repo.AddHisData(devID, status.RawMsg); err != nil {
 		slog.Error("Save history data failed", "error", err, "status", status)
 	}
 
-	// 2. TODO: 业务逻辑处理（补充以下实现）
+	// 2. TODO: Business logic processing (supplement the following implementation)
 	// --------------------------------------------
-	// 示例1：检查设备是否在线状态变化
+	// Example 1: Check if device online status changes
 	if status.Device != nil {
 		d := status.Device
 		d.ID = &devID
 		if d.Electricity != nil && *d.Electricity < 20 {
-			// TODO 下发提醒任务
+			// TODO Send reminder task
 			mp.repo.AddAlarm(mxm.Alarm{
 				DeviceID: devID,
 				Msg:      fmt.Sprintf("%v%%", *d.Electricity),
@@ -59,14 +59,14 @@ func (mp *MessageProcessor) Process(status *mxm.DeviceStatus1) error {
 			})
 		}
 
-		// 步数记录
+		// Step count record
 		if d.Steps != nil {
 			if err := mp.repo.AddSteps(devID, *(d.Steps)); err != nil {
 				slog.Error("addSteps failed", "error", err.Error(), "status", status)
 			}
 		}
 
-		//如果定位失败，坐标和loctime，只更新通信时间
+		// If positioning fails, coordinates and loctime, only update communication time
 		locFailed := false
 		if d.Latitude == nil || d.Longitude == nil ||
 			(*d.Latitude == 0.0 && *d.Longitude == 0.0) {
@@ -74,7 +74,7 @@ func (mp *MessageProcessor) Process(status *mxm.DeviceStatus1) error {
 		}
 
 		if locFailed {
-			// 只更新设备状态表部分字段,也不做围栏检查
+			// Only update partial fields of device status table, no fence check
 			d.LocTime, d.Accuracy, d.Speed, d.Heading, d.Latitude, d.Longitude,
 				d.Address, d.LocType, d.Satellites = nil, nil, nil, nil, nil, nil, nil, nil, nil
 
@@ -83,13 +83,13 @@ func (mp *MessageProcessor) Process(status *mxm.DeviceStatus1) error {
 			if dev, err := mp.repo.UpdateDevice(*d.ID, update); err != nil {
 				return fmt.Errorf("update device failed: %v", err)
 			} else {
-				// 找到该设备关联的用户，下发推送
+				// Find users associated with this device, send push
 				slog.Debug("update device success", "device", dev)
 			}
 		} else {
-			//TODO 围栏检查
+			//TODO Fence check
 			// if !locFailed && checkFence(d.Location) {
-			// 	slog.Error("设备超出围栏:", "deviceID", devID)
+			// 	slog.Error("Device out of fence:", "deviceID", devID)
 			// }
 			update := utils.StructToUpdateMap(*d)
 			utils.RemoveGormModelFields(update)
@@ -97,7 +97,7 @@ func (mp *MessageProcessor) Process(status *mxm.DeviceStatus1) error {
 			if dev, err := mp.repo.UpdateDevice(*d.ID, update); err != nil {
 				return fmt.Errorf("update device failed: %v", err)
 			} else {
-				//TODO 广播更新
+				//TODO Broadcast update
 				toNotify := make([]uint, 0)
 				if id, err := mp.repo.GetUserIdByDeviceId(*d.ID); err == nil {
 					toNotify = append(toNotify, id)
@@ -112,7 +112,7 @@ func (mp *MessageProcessor) Process(status *mxm.DeviceStatus1) error {
 				slog.Debug("update device success", "device", dev)
 			}
 
-			// 更新轨迹表(历史轨迹必须来自于device状态，以保持统一)
+			// Update track table (historical track must come from device status to maintain consistency)
 			loc := mxm.Location{
 				Address:    utils.Deref(d.Address, ""),
 				Longitude:  utils.Deref(d.Longitude, 0),
@@ -138,7 +138,7 @@ func (mp *MessageProcessor) Process(status *mxm.DeviceStatus1) error {
 			return nil // do nothing
 		}
 
-		// 1. 推送通知客户端
+		// 1. Push notification to client
 		m := &services.WSMessage{
 			Type: "command_result",
 			Data: res,
@@ -148,8 +148,8 @@ func (mp *MessageProcessor) Process(status *mxm.DeviceStatus1) error {
 		}
 		slog.Debug(fmt.Sprintf("command result: %v", res))
 
-		// 2. 有些参数需要根据执行结果来更新数据，比如定时开关机（暂时没找到查询方法）
-		if res.Succeed { //执行成功才更新数据库
+		// 2. Some parameters need to be updated based on execution results, such as scheduled power on/off (no query method found yet)
+		if res.Succeed { // Only update database when execution succeeds
 			cmd := pCmd.Command
 			if cmd.Action == "AUTO_START" {
 				mp.repo.UpsertSettingsFields(map[string]interface{}{

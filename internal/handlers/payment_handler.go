@@ -29,7 +29,7 @@ type PayRequest struct {
 type PaymentHandler struct {
 	cfg  *config.WechatPaymentConfig
 	repo dao.Repository
-	// 可以注入其他依赖如数据库等
+	// Can inject other dependencies like database etc
 }
 
 func NewPaymentHandler(cfg *config.WechatPaymentConfig, repo dao.Repository) *PaymentHandler {
@@ -37,34 +37,34 @@ func NewPaymentHandler(cfg *config.WechatPaymentConfig, repo dao.Repository) *Pa
 }
 
 func (h *PaymentHandler) Renew(userid uint, payerOpenID string, deviceId string, amount int) (*PayRequest, error) {
-	// 1. 生成订单信息
-	// 1. 初始化微信支付客户端
+	// 1. Generate order information
+	// 1. Initialize WeChat Pay client
 	client, err := h.initWechatPayClient()
 	if err != nil {
 		slog.Error("failed to init wechat pay client", "error", err)
 		return nil, fmt.Errorf("failed to init wechat pay client: %v", err)
 	}
 
-	// 2. 获取请求参数（可以从请求中获取或使用默认值）
+	// 2. Get request parameters (can be obtained from request or use default values)
 	openID := payerOpenID
 
-	// 3. 生成订单信息
+	// 3. Generate order information
 	order := &mxm.Order{
 		OrderNo:     h.generateOrderNo(),
-		Description: "设备续费", // tODO 可根据业务自定义
-		Amount:      amount, // 单位:分
+		Description: "设备续费", // TODO can be customized according to business
+		Amount:      amount, // Unit: cents
 		OpenID:      openID,
 		Status:      mxm.OrderStatusCreated,
 		UserID:      userid,
-		DeviceInfo:  deviceId, // 可根据业务自定义
+		DeviceInfo:  deviceId, // Can be customized according to business
 	}
 
-	// 保存订单到数据库
+	// Save order to database
 	if err := h.repo.CreateOrder(order); err != nil {
 		return nil, fmt.Errorf("create order failed: %w", err)
 	}
 
-	// 4. 调用微信支付接口
+	// 4. Call WeChat Pay interface
 	svc := jsapi.JsapiApiService{Client: client}
 	resp, result, err := svc.Prepay(
 		context.Background(),
@@ -87,7 +87,7 @@ func (h *PaymentHandler) Renew(userid uint, payerOpenID string, deviceId string,
 		return nil, fmt.Errorf("wechat pay prepay failed: error=%v, status=%d", err, result.Response.StatusCode)
 	}
 
-	// 5. 生成支付签名
+	// 5. Generate payment signature
 	ts := time.Now().Format("20060102150405")
 	nonceStr := utils.RandomString(32)
 	source := fmt.Sprintf("%s\n%s\n%s\n%s\n",
@@ -102,7 +102,7 @@ func (h *PaymentHandler) Renew(userid uint, payerOpenID string, deviceId string,
 		return nil, fmt.Errorf("sign error: %w", err)
 	}
 
-	// 6. 返回支付参数
+	// 6. Return payment parameters
 	return &PayRequest{
 		//OrderNo:   order.OrderNo,
 		Package:   "prepay_id=" + *resp.PrepayId,
@@ -112,7 +112,7 @@ func (h *PaymentHandler) Renew(userid uint, payerOpenID string, deviceId string,
 	}, nil
 }
 
-// 初始化微信支付客户端
+// Initialize WeChat Pay client
 func (h *PaymentHandler) initWechatPayClient() (*core.Client, error) {
 	publicKey, err := wechatpay_utils.LoadPublicKeyWithPath(h.cfg.WechatpayPublicKeyPath)
 	if err != nil {
@@ -137,12 +137,12 @@ func (h *PaymentHandler) initWechatPayClient() (*core.Client, error) {
 	return core.NewClient(context.Background(), opts...)
 }
 
-// 生成订单号
+// Generate order number
 func (h *PaymentHandler) generateOrderNo() string {
 	return fmt.Sprintf("%s%d", time.Now().Format("20060102"), utils.RandomInt(100000, 999999))
 }
 
-// 生成支付签名
+// Generate payment signature
 func (h *PaymentHandler) generatePaySign(client *core.Client, prepayID *string) (string, error) {
 	source := fmt.Sprintf("%s\n%s\n%s\n%s\n",
 		h.cfg.AppID,

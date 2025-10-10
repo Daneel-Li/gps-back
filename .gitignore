@@ -1,0 +1,11 @@
+*.exe
+*.key
+*.pem
+*.csr
+*.crt
+config.json
+1720270866_20250621_cert
+cache_data.json
+uploads
+devices
+users

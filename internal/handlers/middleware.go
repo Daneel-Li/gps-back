@@ -22,20 +22,20 @@ func WithMidWare(finalHandler http.HandlerFunc, middlwares ...Middleware) http.H
 	}
 }
 
-// Middleware 是一个中间件函数，用于校验请求
+// Middleware is a middleware function for request validation
 func ApiAuthCheck(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// 从请求中获取API密钥
+		// Get API key from request
 		providedKey := r.Header.Get("appKey")
 
-		// 校验API密钥
+		// Validate API key
 		if providedKey != config.GetConfig().MxmAPIKey {
-			// 如果密钥不正确，返回错误响应
+			// If key is incorrect, return error response
 			http.Error(w, "Invalid appKey", http.StatusUnauthorized)
 			return
 		}
 
-		// 如果密钥正确，调用下一个处理函数
+		// If key is correct, call next handler
 		h.ServeHTTP(w, r)
 	}
 }
@@ -43,7 +43,7 @@ func ApiAuthCheck(h http.HandlerFunc) http.HandlerFunc {
 func JWTMiddleware(h http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		// 从请求 Header 中获取 Authorization 令牌
+		// Get Authorization token from request Header
 		tokenString := r.Header.Get("Authorization")
 		if len(tokenString) < 1 {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -59,7 +59,7 @@ func JWTMiddleware(h http.HandlerFunc) http.HandlerFunc {
 		ctx := context.WithValue(r.Context(), "userid", userid)
 		r = r.WithContext(ctx)
 
-		// 调用下一个处理函数
+		// Call next handler
 		h.ServeHTTP(w, r)
 	})
 }

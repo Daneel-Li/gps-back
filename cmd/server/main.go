@@ -35,7 +35,7 @@ func setupLogging(logLevel string) {
 	}
 }
 
-// initDatabase 初始化数据库连接
+// initDatabase initializes database connection
 func initDatabase(cfg *config.Config) *gorm.DB {
 
 	sqlCfg := cfg.Mysql
@@ -43,28 +43,28 @@ func initDatabase(cfg *config.Config) *gorm.DB {
 		sqlCfg.Username, sqlCfg.Password, sqlCfg.Host, sqlCfg.Port, sqlCfg.DBName)
 
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
-		PrepareStmt: true, // 开启预编译提升性能
+		PrepareStmt: true, // Enable prepared statements to improve performance
 		NowFunc: func() time.Time {
-			return time.Now().UTC() // 写入用 UTC
+			return time.Now().UTC() // Use UTC for writing
 		},
 	})
 	if err != nil {
 		log.Fatal("Could not connect to the database", err)
 	}
 
-	// 获取底层*sql.DB对象并配置连接池
+	// Get underlying *sql.DB object and configure connection pool
 	sqlDB, err := db.DB()
 	if err != nil {
 		log.Fatal("Get underlying sql.DB failed", err)
 	}
 
-	// 关键连接池配置
+	// Key connection pool configuration
 	sqlDB.SetConnMaxLifetime(30 * time.Minute)
 	sqlDB.SetMaxIdleConns(20)
 	sqlDB.SetMaxOpenConns(100)
 	sqlDB.SetConnMaxIdleTime(5 * time.Minute)
 
-	// 添加连接健康检查
+	// Add connection health check
 	go func() {
 		for {
 			time.Sleep(1 * time.Minute)
@@ -77,27 +77,27 @@ func initDatabase(cfg *config.Config) *gorm.DB {
 	return db
 }
 
-// initServices 初始化服务容器
+// initServices initializes service container
 func initServices(db *gorm.DB, cfg *config.Config) *services.SimpleServiceContainer {
-	// 初始化地图API服务
+	// Initialize map API service
 	services.InitService()
 
-	// 创建数据访问层
+	// Create data access layer
 	repo := dao.NewMysqlRepository(db)
 
-	// 创建命令管理器
+	// Create command manager
 	cmdM := services.NewCommandManager()
 
-	// 创建简化的服务容器
+	// Create simplified service container
 	serviceContainer := services.NewSimpleServiceContainer(repo, cmdM)
 
-	// 初始化厂商驱动
+	// Initialize vendor drivers
 	initVendorDrivers(serviceContainer, cfg, repo)
 
 	return serviceContainer
 }
 
-// initVendorDrivers 初始化厂商驱动
+// initVendorDrivers initializes vendor drivers
 func initVendorDrivers(serviceContainer *services.SimpleServiceContainer, cfg *config.Config, repo dao.Repository) {
 
 	bttDriver := btt.NewMqttHandler(btt.MqttConfig(cfg.Mqtt), services.NewBttTopicProvider(repo))
@@ -105,14 +105,14 @@ func initVendorDrivers(serviceContainer *services.SimpleServiceContainer, cfg *c
 	v53Driver := v53.NewV53Handler(5353)
 	serviceContainer.RegisterDriver("v53", v53Driver)
 
-	// 设置消息处理器
+	// Set message processor
 	messageProcessor := handlers.NewMessageProcessor(repo, services.NewWsManager(time.Minute*10), services.NewCommandManager())
 	serviceContainer.SetMessageHandler(messageProcessor)
 
 	serviceContainer.StartAllDrivers()
 }
 
-// startServer 启动HTTP服务器
+// startServer starts HTTP server
 func startServer(router *mux.Router, cfg *config.Config) {
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%v", cfg.ServerPort),
@@ -131,30 +131,30 @@ func main() {
 
 	cfg := config.GetConfig()
 
-	// 设置日志级别
+	// Set log level
 	setupLogging(cfg.Loglevel)
 
-	// 初始化数据库连接
+	// Initialize database connection
 	db := initDatabase(cfg)
 
-	// 初始化服务容器
+	// Initialize service container
 	serviceContainer := initServices(db, cfg)
 
-	// 设置路由
+	// Setup routes
 	router := setupRoutes(serviceContainer)
 
-	// 启动HTTP服务器
+	// Start HTTP server
 	startServer(router, cfg)
 }
 
-// setupRoutes 设置路由
+// setupRoutes sets up routes
 func setupRoutes(serviceContainer *services.SimpleServiceContainer) *mux.Router {
 	r := mux.NewRouter()
 
-	// 创建处理器
+	// Create handler
 	h := handlers.NewSimpleHandler(serviceContainer, services.NewWsManager(time.Minute*10),
 		services.NewJWTService(), services.NewWechatService())
-	// 设置中间件
+	// Set middleware
 	midWares := []handlers.Middleware{
 		handlers.ApiAuthCheck,
 		handlers.JWTMiddleware,
@@ -184,8 +184,8 @@ func setupRoutes(serviceContainer *services.SimpleServiceContainer) *mux.Router 
 	r.HandleFunc("/api/v1/devices/{device_id}/alarms", handlers.WithMidWare(h.GetAlarms, midWares...)).Methods("GET")
 	r.HandleFunc("/api/v1/devices/{device_id}/profile", handlers.WithMidWare(h.UpdateProfile, midWares...)).Methods("PUT")
 	r.HandleFunc("/api/v1/devices/{device_id}/profile", handlers.WithMidWare(h.GetProfile, midWares...)).Methods("GET")
-	r.HandleFunc("/api/v1/devices", handlers.WithMidWare(h.EnrollDeviceHandler, midWares...)).Methods("POST") // 注册设备
-	// 统一头像路由
+	r.HandleFunc("/api/v1/devices", handlers.WithMidWare(h.EnrollDeviceHandler, midWares...)).Methods("POST") // Register device
+	// Unified avatar routes
 	r.HandleFunc("/api/v1/{target:users|devices}/{id}/avatar",
 		handlers.WithMidWare(h.GetAvatar, midWares...)).Methods("GET")
 	r.HandleFunc("/api/v1/{target:users|devices}/{id}/avatar",

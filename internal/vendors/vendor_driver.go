@@ -8,24 +8,24 @@ type MessageHandler interface {
 	Process(status *mxm.DeviceStatus1) error
 }
 
-// 定义所有厂商必须实现的强制接口
+// Define mandatory interface that all vendors must implement
 type VendorDriver interface {
-	// 必须调用统一处理器（通过依赖注入）
+	// Must call unified processor (via dependency injection)
 	SetMessageHandler(handler MessageHandler)
 
-	// 厂商自己的启动逻辑
+	// Vendor's own startup logic
 	Start() error
 	Activate(originSN string) error
 	Deactivate(originSN string) error
 
-	SetReportInterval(CommandID int64, originSN string, interval int) error //设置间隔
-	Locate(CommandID int64, originSN string) error                          //立即定位
-	Reboot(CommandID int64, originSN string) error                          // 远程重启
+	SetReportInterval(CommandID int64, originSN string, interval int) error // Set interval
+	Locate(CommandID int64, originSN string) error                          // Immediate location
+	Reboot(CommandID int64, originSN string) error                          // Remote restart
 	PowerOff(CommandID int64, originSN string) error
-	Find(CommandID int64, originSN string) error // 查找设备（寻宠）
+	Find(CommandID int64, originSN string) error // Find device (pet finder)
 }
 
 type AdvancedDriver interface {
-	AutoStart(CommandID int64, originSN string, tm string, enable bool) error //定时开机
-	AutoShut(CommandID int64, originSN string, tm string, enable bool) error  //定时关机
+	AutoStart(CommandID int64, originSN string, tm string, enable bool) error // Scheduled power on
+	AutoShut(CommandID int64, originSN string, tm string, enable bool) error  // Scheduled power off
 }

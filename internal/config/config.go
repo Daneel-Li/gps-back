@@ -8,7 +8,7 @@ import (
 	"golang.org/x/exp/slog"
 )
 
-// DBConfig 存储数据库连接信息
+// DBConfig stores database connection information
 type MysqlConfig struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
@@ -17,7 +17,7 @@ type MysqlConfig struct {
 	DBName   string `json:"dbname"`
 }
 
-// TaosConfig 存储数据库连接信息
+// TaosConfig stores database connection information
 type TaosConfig struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
@@ -39,7 +39,7 @@ type Tls struct {
 	KeyPath  string `json:"key_path"`
 }
 
-// 微信支付相关参数
+// WeChat payment related parameters
 type WechatPaymentConfig struct {
 	WechatpayPublicKeyID   string `json:"wechatpay_public_key_id"`
 	WechatpayPublicKeyPath string `json:"wechatpay_public_key_path"`
@@ -74,7 +74,7 @@ type Config struct {
 	JwtKey                  []byte
 	DataPath                string              `json:"data_path"`      //数据路径
 	AvatarPath              string              `json:"avatar_path"`    //	头像存储路径
-	WechatPayment           WechatPaymentConfig `json:"wechat_payment"` // 微信支付相关参数
+	WechatPayment           WechatPaymentConfig `json:"wechat_payment"` // WeChat payment related parameters
 }
 
 var (

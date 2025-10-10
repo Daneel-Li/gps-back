@@ -23,7 +23,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// SimpleHandler 简化的处理器
+// SimpleHandler simplified handler
 type SimpleHandler struct {
 	services      *services.SimpleServiceContainer
 	wsManager     *services.WSManager
@@ -31,7 +31,7 @@ type SimpleHandler struct {
 	wechatService services.WechatService
 }
 
-// NewSimpleHandler 创建简化的处理器
+// NewSimpleHandler creates simplified handler
 func NewSimpleHandler(services *services.SimpleServiceContainer, wsManager *services.WSManager,
 	jwtGenerator services.JWTService, wechatService services.WechatService) *SimpleHandler {
 	return &SimpleHandler{
@@ -42,14 +42,14 @@ func NewSimpleHandler(services *services.SimpleServiceContainer, wsManager *serv
 	}
 }
 
-// GetDevice 获取设备信息
+// GetDevice gets device information
 func (h *SimpleHandler) GetDevice(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	deviceID := mux.Vars(r)["device_id"]
 	userID := h.getUserIDFromContext(ctx)
 
 	if deviceID != "" {
-		// 获取单个设备
+		// Get single device
 		device, err := h.services.GetDeviceByID(ctx, deviceID, userID)
 		if err != nil {
 			h.handleError(w, err)
@@ -59,7 +59,7 @@ func (h *SimpleHandler) GetDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 获取用户所有设备
+	// Get all devices of user
 	devices, err := h.services.GetDevicesByUser(ctx, userID)
 	if err != nil {
 		h.handleError(w, err)
@@ -69,7 +69,7 @@ func (h *SimpleHandler) GetDevice(w http.ResponseWriter, r *http.Request) {
 	utils.WriteHttpResponse(w, http.StatusOK, devices)
 }
 
-// BindDevice 绑定设备
+// BindDevice binds device
 func (h *SimpleHandler) BindDevice(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := h.getUserIDFromContext(ctx)
@@ -90,7 +90,7 @@ func (h *SimpleHandler) BindDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 激活设备
+	// Activate device
 	if err := h.services.ActivateDevice(ctx, req.OriginSN, req.DeviceType); err != nil {
 		h.handleError(w, err)
 		return
@@ -101,7 +101,7 @@ func (h *SimpleHandler) BindDevice(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// UnbindDevice 解绑设备
+// UnbindDevice unbinds device
 func (h *SimpleHandler) UnbindDevice(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	deviceID := mux.Vars(r)["device_id"]
@@ -117,7 +117,7 @@ func (h *SimpleHandler) UnbindDevice(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GetUser 获取用户信息
+// GetUser gets user information
 func (h *SimpleHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := h.getUserIDFromContext(ctx)
@@ -131,7 +131,7 @@ func (h *SimpleHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	utils.WriteHttpResponse(w, http.StatusOK, user)
 }
 
-// UpdateUser 更新用户信息
+// UpdateUser updates user information
 func (h *SimpleHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := h.getUserIDFromContext(ctx)
@@ -152,7 +152,7 @@ func (h *SimpleHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// handleError 统一错误处理
+// handleError unified error handling
 func (h *SimpleHandler) handleError(w http.ResponseWriter, err error) {
 	slog.Error("Handler error", "error", err)
 
@@ -168,7 +168,7 @@ func (h *SimpleHandler) handleError(w http.ResponseWriter, err error) {
 	}
 }
 
-// getUserIDFromContext 从上下文获取用户ID
+// getUserIDFromContext gets user ID from context
 func (h *SimpleHandler) getUserIDFromContext(ctx context.Context) uint {
 	if userID, ok := ctx.Value("userid").(uint); ok {
 		return userID
@@ -176,7 +176,7 @@ func (h *SimpleHandler) getUserIDFromContext(ctx context.Context) uint {
 	return 0
 }
 
-// 错误类型判断函数
+// Error type judgment functions
 func (h *SimpleHandler) isNotFoundError(err error) bool {
 	return err != nil && (err.Error() == "device not found" || err.Error() == "user not found")
 }
@@ -190,7 +190,7 @@ func (h *SimpleHandler) isValidationError(err error) bool {
 		err.Error() == "Invalid request body")
 }
 
-// GetTrack 获取轨迹信息
+// GetTrack gets track information
 func (h *SimpleHandler) GetTrack(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	deviceId := mux.Vars(r)["device_id"]
@@ -217,7 +217,7 @@ func (h *SimpleHandler) GetTrack(w http.ResponseWriter, r *http.Request) {
 	utils.WriteHttpResponse(w, http.StatusOK, map[string]interface{}{"code": 0, "data": track})
 }
 
-// GetReportInterval 获取设备上报间隔
+// GetReportInterval gets device reporting interval
 func (h *SimpleHandler) GetReportInterval(w http.ResponseWriter, r *http.Request) {
 	deviceId := mux.Vars(r)["device_id"]
 
@@ -232,7 +232,7 @@ func (h *SimpleHandler) GetReportInterval(w http.ResponseWriter, r *http.Request
 	})
 }
 
-// GetAutoPower 获取定时开关机参数
+// GetAutoPower gets scheduled power on/off parameters
 func (h *SimpleHandler) GetAutoPower(w http.ResponseWriter, r *http.Request) {
 	deviceId := mux.Vars(r)["device_id"]
 
@@ -245,11 +245,11 @@ func (h *SimpleHandler) GetAutoPower(w http.ResponseWriter, r *http.Request) {
 	utils.WriteHttpResponse(w, http.StatusOK, params)
 }
 
-// GetSafeRegions 获取安全区域
+// GetSafeRegions gets safe regions
 func (h *SimpleHandler) GetSafeRegions(w http.ResponseWriter, r *http.Request) {
 	deviceId := mux.Vars(r)["device_id"]
 
-	// 获取用户ID
+	// Get user ID
 	userID, err := getUserIDFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -265,7 +265,7 @@ func (h *SimpleHandler) GetSafeRegions(w http.ResponseWriter, r *http.Request) {
 	utils.WriteHttpResponse(w, http.StatusOK, regions)
 }
 
-// PutSafeRegion 设置安全区域
+// PutSafeRegion sets safe region
 func (h *SimpleHandler) PutSafeRegion(w http.ResponseWriter, r *http.Request) {
 	deviceId := mux.Vars(r)["device_id"]
 
@@ -283,7 +283,7 @@ func (h *SimpleHandler) PutSafeRegion(w http.ResponseWriter, r *http.Request) {
 	utils.WriteHttpResponse(w, http.StatusOK, "success")
 }
 
-// GetAlarms 获取告警列表
+// GetAlarms gets alarm list
 func (h *SimpleHandler) GetAlarms(w http.ResponseWriter, r *http.Request) {
 	deviceId := mux.Vars(r)["device_id"]
 
@@ -296,7 +296,7 @@ func (h *SimpleHandler) GetAlarms(w http.ResponseWriter, r *http.Request) {
 	utils.WriteHttpResponse(w, http.StatusOK, alarms)
 }
 
-// Command 设备命令处理
+// Command handles device commands
 func (h *SimpleHandler) Command(w http.ResponseWriter, r *http.Request) {
 	deviceId := mux.Vars(r)["device_id"]
 
@@ -330,7 +330,7 @@ func (h *SimpleHandler) Command(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GetSteps 获取步数数据
+// GetSteps gets step count data
 func (h *SimpleHandler) GetSteps(w http.ResponseWriter, r *http.Request) {
 	deviceId := mux.Vars(r)["device_id"]
 	date := r.URL.Query().Get("date")
@@ -349,7 +349,7 @@ func (h *SimpleHandler) GetSteps(w http.ResponseWriter, r *http.Request) {
 	utils.WriteHttpResponse(w, http.StatusOK, steps)
 }
 
-// GetProfile 获取设备档案
+// GetProfile gets device profile
 func (h *SimpleHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	deviceID := mux.Vars(r)["device_id"]
 
@@ -362,7 +362,7 @@ func (h *SimpleHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	utils.WriteHttpResponse(w, http.StatusOK, profile)
 }
 
-// UpdateProfile 更新设备档案
+// UpdateProfile updates device profile
 func (h *SimpleHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	deviceID := mux.Vars(r)["device_id"]
 
@@ -380,12 +380,12 @@ func (h *SimpleHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	utils.WriteHttpResponse(w, http.StatusOK, "success")
 }
 
-// UploadFileHandler 文件上传处理
+// UploadFileHandler handles file upload
 func (h *SimpleHandler) UploadFileHandler(w http.ResponseWriter, r *http.Request) {
-	target := mux.Vars(r)["target"] // target可以是devices/users
-	id := mux.Vars(r)["id"]         // 对应device_id/user_id
+	target := mux.Vars(r)["target"] // target can be devices/users
+	id := mux.Vars(r)["id"]         // corresponds to device_id/user_id
 
-	// 限制请求体的大小为10MB
+	// Limit request body size to 10MB
 	r.Body = http.MaxBytesReader(w, r.Body, 10<<20)
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -398,7 +398,7 @@ func (h *SimpleHandler) UploadFileHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// 获取上传的文件
+	// Get uploaded file
 	file, handler, err := r.FormFile("avatar")
 	if err != nil {
 		http.Error(w, "Error Retrieving the File", http.StatusInternalServerError)
@@ -409,7 +409,7 @@ func (h *SimpleHandler) UploadFileHandler(w http.ResponseWriter, r *http.Request
 	slog.Debug(fmt.Sprintf("Uploaded File: %s", handler.Filename))
 	slog.Debug(fmt.Sprintf("File Size: %d", handler.Size))
 
-	// 定义文件保存路径
+	// Define file save path
 	avatarDir := filepath.Join(config.GetConfig().AvatarPath, target)
 	if err := os.MkdirAll(avatarDir, 0755); err != nil {
 		slog.Error("无法创建存储目录", "err", err)
@@ -417,10 +417,10 @@ func (h *SimpleHandler) UploadFileHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// 生成唯一文件名
+	// Generate unique filename
 	ext := filepath.Ext(handler.Filename)
 	if ext == "" {
-		ext = ".jpg" // 默认扩展名
+		ext = ".jpg" // Default extension
 	}
 	filename := fmt.Sprintf("%s_%d%s", id, time.Now().Unix(), ext)
 	filePath := filepath.Join(avatarDir, filename)
@@ -430,44 +430,44 @@ func (h *SimpleHandler) UploadFileHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// 更新数据库记录
+	// Update database record
 	if err := h.services.UpdateAvatar(r.Context(), target, id, filename); err != nil {
 		slog.Error("update avatar failed", "err", err)
 		http.Error(w, "error", http.StatusInternalServerError)
 		return
 	}
 
-	// 返回响应
+	// Return response
 	utils.WriteHttpResponse(w, http.StatusOK, map[string]interface{}{
 		"avatar_url": filename,
 	})
 }
 
-// 保存上传的文件
+// Save uploaded file
 func saveFile(fileHeader *multipart.FileHeader, targetPath string) error {
-	// 打开文件
+	// Open file
 	src, err := fileHeader.Open()
 	if err != nil {
 		return err
 	}
 	defer src.Close()
 
-	// 创建目标文件
+	// Create target file
 	dst, err := os.Create(targetPath)
 	if err != nil {
 		return err
 	}
 	defer dst.Close()
 
-	// 复制文件内容
+	// Copy file content
 	_, err = io.Copy(dst, src)
 	return err
 }
 
-// GetAvatar 获取头像
+// GetAvatar gets avatar
 func (h *SimpleHandler) GetAvatar(w http.ResponseWriter, r *http.Request) {
-	target := mux.Vars(r)["target"] // target可以是devices/users
-	id := mux.Vars(r)["id"]         // 对应device_id/user_id
+	target := mux.Vars(r)["target"] // target can be devices/users
+	id := mux.Vars(r)["id"]         // corresponds to device_id/user_id
 
 	filename, err := h.services.GetAvatar(r.Context(), target, id)
 	if err != nil {
@@ -478,7 +478,7 @@ func (h *SimpleHandler) GetAvatar(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, filepath.Join(config.GetConfig().AvatarPath, target, filename))
 }
 
-// AddFeedback 添加反馈
+// AddFeedback adds feedback
 func (h *SimpleHandler) AddFeedback(w http.ResponseWriter, r *http.Request) {
 	userid := h.getUserIDFromContext(r.Context())
 
@@ -498,7 +498,7 @@ func (h *SimpleHandler) AddFeedback(w http.ResponseWriter, r *http.Request) {
 	utils.WriteHttpResponse(w, http.StatusOK, "success")
 }
 
-// GetFeedbacks 获取反馈列表
+// GetFeedbacks gets feedback list
 func (h *SimpleHandler) GetFeedbacks(w http.ResponseWriter, r *http.Request) {
 	userid := h.getUserIDFromContext(r.Context())
 
@@ -511,13 +511,13 @@ func (h *SimpleHandler) GetFeedbacks(w http.ResponseWriter, r *http.Request) {
 	utils.WriteHttpResponse(w, http.StatusOK, feedbacks)
 }
 
-// UpgradeWS WebSocket升级处理
+// UpgradeWS handles WebSocket upgrade
 func (h *SimpleHandler) UpgradeWS(w http.ResponseWriter, r *http.Request) {
 	var upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 		CheckOrigin: func(r *http.Request) bool {
-			return true // 根据安全需求调整
+			return true // Adjust according to security requirements
 		},
 	}
 
@@ -527,18 +527,18 @@ func (h *SimpleHandler) UpgradeWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 首帧鉴权并注册
+	// Authenticate and register on first frame
 	h.wsManager.AuthenticateAndRegister(conn)
 }
 
-// PaySuccNotify 支付成功回调通知
+// PaySuccNotify payment success callback notification
 func (h *SimpleHandler) PaySuccNotify(w http.ResponseWriter, r *http.Request) {
 	slog.Debug("收到微信支付回调通知", "body", r.Body)
-	// TODO: 实现支付回调处理逻辑
+	// TODO: Implement payment callback processing logic
 	utils.WriteHttpResponse(w, http.StatusOK, "success")
 }
 
-// Renew 续费充值
+// Renew subscription recharge
 func (h *SimpleHandler) Renew(w http.ResponseWriter, r *http.Request) {
 	userid := h.getUserIDFromContext(r.Context())
 	deviceId := mux.Vars(r)["device_id"]
@@ -552,7 +552,7 @@ func (h *SimpleHandler) Renew(w http.ResponseWriter, r *http.Request) {
 	utils.WriteHttpResponse(w, http.StatusOK, paymentReq)
 }
 
-// CreateShareMapping 创建设备分享
+// CreateShareMapping creates device sharing
 func (h *SimpleHandler) CreateShareMapping(w http.ResponseWriter, r *http.Request) {
 	userid := h.getUserIDFromContext(r.Context())
 
@@ -574,7 +574,7 @@ func (h *SimpleHandler) CreateShareMapping(w http.ResponseWriter, r *http.Reques
 	utils.WriteHttpResponse(w, http.StatusOK, "success")
 }
 
-// MoveShareMapping 移动设备分享
+// MoveShareMapping moves device sharing
 func (h *SimpleHandler) MoveShareMapping(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		UserID   float64 `json:"userId"`
@@ -594,7 +594,7 @@ func (h *SimpleHandler) MoveShareMapping(w http.ResponseWriter, r *http.Request)
 	utils.WriteHttpResponse(w, http.StatusOK, "success")
 }
 
-// GetShareMappings 获取分享映射列表
+// GetShareMappings gets sharing mapping list
 func (h *SimpleHandler) GetShareMappings(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	sUserId := query.Get("userId")
@@ -625,40 +625,40 @@ func (h *SimpleHandler) GetShareMappings(w http.ResponseWriter, r *http.Request)
 	utils.WriteHttpResponse(w, http.StatusOK, mappings)
 }
 
-// EnrollDeviceHandler 设备入库处理
+// EnrollDeviceHandler handles device enrollment
 func (h *SimpleHandler) EnrollDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	userid := h.getUserIDFromContext(r.Context())
 
-	// 检查用户是否有入库权限
+	// Check if user has enrollment permission
 	if !h.services.IsEnrollAdmin(r.Context(), userid) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	// 解析请求体
+	// Parse request body
 	var req mxm.DeviceEnrollRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Bad request: invalid JSON", http.StatusBadRequest)
 		return
 	}
 
-	// 验证必填字段
+	// Validate required fields
 	if req.SerialNumber == "" || req.Model == "" {
 		http.Error(w, "Bad request: serial_number and model are required", http.StatusBadRequest)
 		return
 	}
 
-	// 处理设备入库逻辑
+	// Process device enrollment logic
 	if err := h.services.EnrollDevice(r.Context(), req); err != nil {
 		h.handleError(w, err)
 		return
 	}
 
-	// 返回成功响应
+	// Return success response
 	utils.WriteHttpResponse(w, http.StatusOK, "success")
 }
 
-// LoginHandler 处理小程序端的登录请求
+// LoginHandler handles mini program login requests
 func (h *SimpleHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	slog.Info("Login handler")
 
@@ -676,20 +676,20 @@ func (h *SimpleHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 调用微信接口获取 session_key 和 openid
+	// Call WeChat interface to get session_key and openid
 	session, err := h.wechatService.GetSession(req.Code)
 	if err != nil {
 		http.Error(w, "获取 session 失败", http.StatusInternalServerError)
 		return
 	}
 
-	// 如果微信接口返回错误
+	// If WeChat interface returns error
 	if session.Errcode != 0 {
 		http.Error(w, fmt.Sprintf("微信接口错误: %d, %s", session.Errcode, session.Errmsg), http.StatusInternalServerError)
 		return
 	}
 
-	// 查询或创建用户
+	// Query or create user
 	user, err := h.services.GetOrCreateUserByOpenId(r.Context(), session.OpenID)
 	if err != nil {
 		slog.Error("GetOrCreateUserByOpenId failed", "openid", session.OpenID, "err", err.Error())
@@ -697,7 +697,7 @@ func (h *SimpleHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 生成JWT token
+	// Generate JWT token
 	token, err := h.jwtGenerator.GenerateToken(*user)
 	if err != nil {
 		http.Error(w, "登录失败: 无法生成令牌", http.StatusInternalServerError)
@@ -710,7 +710,7 @@ func (h *SimpleHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// getUserIDFromContext 从请求上下文中获取用户ID
+// getUserIDFromContext gets user ID from request context
 func getUserIDFromContext(ctx context.Context) (uint, error) {
 	userID, ok := ctx.Value("userid").(uint)
 	if !ok {

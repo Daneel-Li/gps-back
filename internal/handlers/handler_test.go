@@ -19,7 +19,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockSimpleServiceContainer 模拟服务容器
+// MockSimpleServiceContainer mock service container
 type MockSimpleServiceContainer struct {
 	mock.Mock
 }
@@ -86,7 +86,7 @@ func (m *MockSimpleServiceContainer) GetOrCreateUserByOpenId(ctx context.Context
 	return args.Get(0).(*mxm.User), args.Error(1)
 }
 
-// MockWSManager 模拟 WebSocket 管理器
+// MockWSManager mock WebSocket manager
 type MockWSManager struct {
 	mock.Mock
 }
@@ -95,7 +95,7 @@ func (m *MockWSManager) AuthenticateAndRegister(conn interface{}) {
 	m.Called(conn)
 }
 
-// MockJWTService 模拟 JWT 服务
+// MockJWTService mock JWT service
 type MockJWTService struct {
 	mock.Mock
 }
@@ -110,7 +110,7 @@ func (m *MockJWTService) ValidateToken(tokenString string) (uint, error) {
 	return uint(args.Int(0)), args.Error(1)
 }
 
-// MockWechatService 模拟微信服务
+// MockWechatService mock WeChat service
 type MockWechatService struct {
 	mock.Mock
 }
@@ -417,7 +417,7 @@ func TestGetDevice(t *testing.T) {
 	handler, mockServices, _, _, _ := createTestSimpleHandler()
 
 	t.Run("GetSingleDevice", func(t *testing.T) {
-		// 准备测试数据
+		// Prepare test data
 		deviceID := "test-device-id"
 		userID := uint(1)
 		expectedDevice := &mxm.Device{
@@ -427,41 +427,41 @@ func TestGetDevice(t *testing.T) {
 			UserID:   &userID,
 		}
 
-		// 设置 mock 期望
+		// Set mock expectations
 		mockServices.On("GetDeviceByID", mock.Anything, deviceID, userID).Return(expectedDevice, nil)
 
-		// 创建请求
+		// Create request
 		req := createRequestWithContext("GET", "/device/"+deviceID, nil, userID)
 		req = mux.SetURLVars(req, map[string]string{"device_id": deviceID})
 		w := httptest.NewRecorder()
 
-		// 执行测试
+		// Execute test
 		handler.GetDevice(w, req)
 
-		// 验证结果
+		// Verify result
 		assert.Equal(t, http.StatusOK, w.Code)
 		mockServices.AssertExpectations(t)
 	})
 
 	t.Run("GetAllDevices", func(t *testing.T) {
-		// 准备测试数据
+		// Prepare test data
 		userID := uint(1)
 		expectedDevices := []*mxm.Device{
 			{ID: stringPtr("device1"), UserID: &userID},
 			{ID: stringPtr("device2"), UserID: &userID},
 		}
 
-		// 设置 mock 期望
+		// Set mock expectations
 		mockServices.On("GetDevicesByUser", mock.Anything, userID).Return(expectedDevices, nil)
 
-		// 创建请求
+		// Create request
 		req := createRequestWithContext("GET", "/device", nil, userID)
 		w := httptest.NewRecorder()
 
-		// 执行测试
+		// Execute test
 		handler.GetDevice(w, req)
 
-		// 验证结果
+		// Verify result
 		assert.Equal(t, http.StatusOK, w.Code)
 		mockServices.AssertExpectations(t)
 	})
@@ -470,18 +470,18 @@ func TestGetDevice(t *testing.T) {
 		deviceID := "non-existent-device"
 		userID := uint(1)
 
-		// 设置 mock 期望返回错误
+		// Set mock expectations返回错误
 		mockServices.On("GetDeviceByID", mock.Anything, deviceID, userID).Return(nil, errors.New("device not found"))
 
-		// 创建请求
+		// Create request
 		req := createRequestWithContext("GET", "/device/"+deviceID, nil, userID)
 		req = mux.SetURLVars(req, map[string]string{"device_id": deviceID})
 		w := httptest.NewRecorder()
 
-		// 执行测试
+		// Execute test
 		handler.GetDevice(w, req)
 
-		// 验证结果
+		// Verify result
 		assert.Equal(t, http.StatusNotFound, w.Code)
 		mockServices.AssertExpectations(t)
 	})
@@ -499,18 +499,18 @@ func TestBindDevice(t *testing.T) {
 			"label":       "My Device",
 		}
 
-		// 设置 mock 期望
+		// Set mock expectations
 		mockServices.On("BindDevice", mock.Anything, userID, "123456", "GPS", "My Device").Return(nil)
 		mockServices.On("ActivateDevice", mock.Anything, "123456", "GPS").Return(nil)
 
-		// 创建请求
+		// Create request
 		req := createRequestWithContext("POST", "/device/bind", bindReq, userID)
 		w := httptest.NewRecorder()
 
-		// 执行测试
+		// Execute test
 		handler.BindDevice(w, req)
 
-		// 验证结果
+		// Verify result
 		assert.Equal(t, http.StatusOK, w.Code)
 		mockServices.AssertExpectations(t)
 	})
@@ -525,10 +525,10 @@ func TestBindDevice(t *testing.T) {
 		req = req.WithContext(ctx)
 		w := httptest.NewRecorder()
 
-		// 执行测试
+		// Execute test
 		handler.BindDevice(w, req)
 
-		// 验证结果
+		// Verify result
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
@@ -542,17 +542,17 @@ func TestBindDevice(t *testing.T) {
 			"label":       "My Device",
 		}
 
-		// 设置 mock 期望返回错误
+		// Set mock expectations返回错误
 		mockServices.On("BindDevice", mock.Anything, userID, "123456", "GPS", "My Device").Return(errors.New("device is invalid or already bound"))
 
-		// 创建请求
+		// Create request
 		req := createRequestWithContext("POST", "/device/bind", bindReq, userID)
 		w := httptest.NewRecorder()
 
-		// 执行测试
+		// Execute test
 		handler.BindDevice(w, req)
 
-		// 验证结果
+		// Verify result
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 		mockServices.AssertExpectations(t)
 	})
@@ -566,18 +566,18 @@ func TestUnbindDevice(t *testing.T) {
 		deviceID := "test-device-id"
 		userID := uint(1)
 
-		// 设置 mock 期望
+		// Set mock expectations
 		mockServices.On("UnbindDevice", mock.Anything, userID, deviceID).Return(nil)
 
-		// 创建请求
+		// Create request
 		req := createRequestWithContext("DELETE", "/device/"+deviceID, nil, userID)
 		req = mux.SetURLVars(req, map[string]string{"device_id": deviceID})
 		w := httptest.NewRecorder()
 
-		// 执行测试
+		// Execute test
 		handler.UnbindDevice(w, req)
 
-		// 验证结果
+		// Verify result
 		assert.Equal(t, http.StatusOK, w.Code)
 		mockServices.AssertExpectations(t)
 	})
@@ -588,18 +588,18 @@ func TestUnbindDevice(t *testing.T) {
 		deviceID := "test-device-id"
 		userID := uint(1)
 
-		// 设置 mock 期望返回错误
+		// Set mock expectations返回错误
 		mockServices.On("UnbindDevice", mock.Anything, userID, deviceID).Return(errors.New("permission denied"))
 
-		// 创建请求
+		// Create request
 		req := createRequestWithContext("DELETE", "/device/"+deviceID, nil, userID)
 		req = mux.SetURLVars(req, map[string]string{"device_id": deviceID})
 		w := httptest.NewRecorder()
 
-		// 执行测试
+		// Execute test
 		handler.UnbindDevice(w, req)
 
-		// 验证结果
+		// Verify result
 		assert.Equal(t, http.StatusForbidden, w.Code)
 		mockServices.AssertExpectations(t)
 	})
@@ -617,17 +617,17 @@ func TestGetUser(t *testing.T) {
 			Nickname: "Test User",
 		}
 
-		// 设置 mock 期望
+		// Set mock expectations
 		mockServices.On("GetUser", mock.Anything, userID).Return(expectedUser, nil)
 
-		// 创建请求
+		// Create request
 		req := createRequestWithContext("GET", "/user", nil, userID)
 		w := httptest.NewRecorder()
 
-		// 执行测试
+		// Execute test
 		handler.GetUser(w, req)
 
-		// 验证结果
+		// Verify result
 		assert.Equal(t, http.StatusOK, w.Code)
 		mockServices.AssertExpectations(t)
 	})
@@ -635,17 +635,17 @@ func TestGetUser(t *testing.T) {
 	t.Run("UserNotFound", func(t *testing.T) {
 		userID := uint(999)
 
-		// 设置 mock 期望返回错误
+		// Set mock expectations返回错误
 		mockServices.On("GetUser", mock.Anything, userID).Return(nil, errors.New("user not found"))
 
-		// 创建请求
+		// Create request
 		req := createRequestWithContext("GET", "/user", nil, userID)
 		w := httptest.NewRecorder()
 
-		// 执行测试
+		// Execute test
 		handler.GetUser(w, req)
 
-		// 验证结果
+		// Verify result
 		assert.Equal(t, http.StatusNotFound, w.Code)
 		mockServices.AssertExpectations(t)
 	})
@@ -661,17 +661,17 @@ func TestUpdateUser(t *testing.T) {
 			"nickname": "New Nickname",
 		}
 
-		// 设置 mock 期望
+		// Set mock expectations
 		mockServices.On("UpdateUser", mock.Anything, userID, updates).Return(nil)
 
-		// 创建请求
+		// Create request
 		req := createRequestWithContext("PUT", "/user", updates, userID)
 		w := httptest.NewRecorder()
 
-		// 执行测试
+		// Execute test
 		handler.UpdateUser(w, req)
 
-		// 验证结果
+		// Verify result
 		assert.Equal(t, http.StatusOK, w.Code)
 		mockServices.AssertExpectations(t)
 	})
@@ -686,10 +686,10 @@ func TestUpdateUser(t *testing.T) {
 		req = req.WithContext(ctx)
 		w := httptest.NewRecorder()
 
-		// 执行测试
+		// Execute test
 		handler.UpdateUser(w, req)
 
-		// 验证结果
+		// Verify result
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 }
@@ -706,19 +706,19 @@ func TestGetTrack(t *testing.T) {
 			map[string]interface{}{"lat": 39.9, "lng": 116.4},
 		}
 
-		// 设置 mock 期望 - 使用实际会被解析的时间格式
+		// Set mock expectations - 使用实际会被解析的时间格式
 		mockServices.On("GetDeviceTrack", mock.Anything, deviceID, startTime, endTime, []string{"GPS", "WIFI", "LBS"}).Return(expectedTrack, nil)
 
-		// 创建请求 - 使用 URL 编码的时间格式
+		// Create request - 使用 URL 编码的时间格式
 		url := fmt.Sprintf("/device/%s/track?startTime=%s&endTime=%s", deviceID, "2023-01-01+00:00:00", "2023-01-01+23:59:59")
 		req := httptest.NewRequest("GET", url, nil)
 		req = mux.SetURLVars(req, map[string]string{"device_id": deviceID})
 		w := httptest.NewRecorder()
 
-		// 执行测试
+		// Execute test
 		handler.GetTrack(w, req)
 
-		// 验证结果
+		// Verify result
 		assert.Equal(t, http.StatusOK, w.Code)
 		mockServices.AssertExpectations(t)
 	})
@@ -731,10 +731,10 @@ func TestGetTrack(t *testing.T) {
 		req = mux.SetURLVars(req, map[string]string{"device_id": deviceID})
 		w := httptest.NewRecorder()
 
-		// 执行测试
+		// Execute test
 		handler.GetTrack(w, req)
 
-		// 验证结果
+		// Verify result
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 }
@@ -751,18 +751,18 @@ func TestCommand(t *testing.T) {
 		}
 		expectedCommandID := "cmd-123"
 
-		// 设置 mock 期望
+		// Set mock expectations
 		mockServices.On("ExecuteCommand", mock.Anything, deviceID, "LOCATE", []string{"now"}, "").Return(expectedCommandID, nil)
 
-		// 创建请求
+		// Create request
 		req := createRequestWithContext("POST", "/device/"+deviceID+"/command", commandReq, uint(1))
 		req = mux.SetURLVars(req, map[string]string{"device_id": deviceID})
 		w := httptest.NewRecorder()
 
-		// 执行测试
+		// Execute test
 		handler.Command(w, req)
 
-		// 验证结果
+		// Verify result
 		assert.Equal(t, http.StatusOK, w.Code)
 		mockServices.AssertExpectations(t)
 	})
@@ -773,15 +773,15 @@ func TestCommand(t *testing.T) {
 			"args": "now",
 		}
 
-		// 创建请求
+		// Create request
 		req := createRequestWithContext("POST", "/device/"+deviceID+"/command", commandReq, uint(1))
 		req = mux.SetURLVars(req, map[string]string{"device_id": deviceID})
 		w := httptest.NewRecorder()
 
-		// 执行测试
+		// Execute test
 		handler.Command(w, req)
 
-		// 验证结果
+		// Verify result
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 }
@@ -809,19 +809,19 @@ func TestLoginHandler(t *testing.T) {
 
 		token := "jwt-token"
 
-		// 设置 mock 期望
+		// Set mock expectations
 		mockWechatService.On("GetSession", "test-code").Return(wechatSession, nil)
 		mockServices.On("GetOrCreateUserByOpenId", mock.Anything, "test-openid").Return(user, nil)
 		mockJWTService.On("GenerateToken", *user).Return(token, nil)
 
-		// 创建请求
+		// Create request
 		req := createRequestWithContext("POST", "/login", loginReq, uint(0))
 		w := httptest.NewRecorder()
 
-		// 执行测试
+		// Execute test
 		handler.LoginHandler(w, req)
 
-		// 验证结果
+		// Verify result
 		assert.Equal(t, http.StatusOK, w.Code)
 		mockWechatService.AssertExpectations(t)
 		mockServices.AssertExpectations(t)
@@ -831,14 +831,14 @@ func TestLoginHandler(t *testing.T) {
 	t.Run("MissingCode", func(t *testing.T) {
 		loginReq := map[string]string{}
 
-		// 创建请求
+		// Create request
 		req := createRequestWithContext("POST", "/login", loginReq, uint(0))
 		w := httptest.NewRecorder()
 
-		// 执行测试
+		// Execute test
 		handler.LoginHandler(w, req)
 
-		// 验证结果
+		// Verify result
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
@@ -852,16 +852,16 @@ func TestLoginHandler(t *testing.T) {
 			Errmsg:  "invalid code",
 		}
 
-		// 设置 mock 期望
+		// Set mock expectations
 		mockWechatService.On("GetSession", "test-code3").Return(wechatSession, nil)
-		// 创建请求
+		// Create request
 		req := createRequestWithContext("POST", "/login", loginReq, uint(0))
 		w := httptest.NewRecorder()
 
-		// 执行测试
+		// Execute test
 		handler.LoginHandler(w, req)
 
-		// 验证结果
+		// Verify result
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 		mockWechatService.AssertExpectations(t)
 	})

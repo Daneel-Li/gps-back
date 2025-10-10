@@ -23,34 +23,34 @@ func NewJWTService() JWTService {
 	return &jWTServiceImpl{}
 }
 
-// Key 是用于签名JWT的密钥
+// Key is the secret key used for signing JWT
 
-// generateToken 生成JWT令牌
+// generateToken generates JWT token
 func (j *jWTServiceImpl) GenerateToken(user mxm.User) (string, error) {
-	// 设置claims
+	// Set claims
 	claims := jwt.MapClaims{
 		"iss":    config.GetConfig().JwtIssuer,
 		"userid": user.ID,
 		"openid": user.OpenID,
-		"exp":    time.Now().Add(time.Hour * 24).Unix(), // 令牌有效期为24小时
+		"exp":    time.Now().Add(time.Hour * 24).Unix(), // Token valid for 24 hours
 		"iat":    time.Now().Unix(),
 	}
 
-	// 创建token对象，使用HS256签名
+	// Create token object using HS256 signing
 	token := jwt.New(jwt.SigningMethodHS256)
 	token.Claims = claims
 
-	// 签名并获取token字符串
+	// Sign and get token string
 	return token.SignedString(config.GetConfig().JwtKey)
 }
 
 func (j *jWTServiceImpl) ValidateToken(tokenString string) (uint, error) {
-	// 解析令牌字符串，忽略 "Bearer " 前缀
+	// Parse token string, ignore "Bearer " prefix
 	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
 
-	// 解析 JWT
+	// Parse JWT
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// 这里可以添加密钥验证逻辑
+		// Key validation logic can be added here
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
@@ -66,7 +66,7 @@ func (j *jWTServiceImpl) ValidateToken(tokenString string) (uint, error) {
 		return 0, fmt.Errorf("invalid token claims")
 	}
 
-	// 4. 校验时效性和发行人
+	// 4. Verify timeliness and issuer
 	if !claims.VerifyIssuer(config.GetConfig().JwtIssuer, true) {
 		return 0, fmt.Errorf("issuer validation failed")
 	}
@@ -74,8 +74,8 @@ func (j *jWTServiceImpl) ValidateToken(tokenString string) (uint, error) {
 		return 0, fmt.Errorf("token expired")
 	}
 
-	// 5. 提取userID
-	userID, ok := claims["userid"].(float64) // JSON数字默认解析为float64
+	// 5. Extract userID
+	userID, ok := claims["userid"].(float64) // JSON numbers are parsed as float64 by default
 	if !ok {
 		return 0, errors.New("userid claim missing or invalid type")
 	}

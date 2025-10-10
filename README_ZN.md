@@ -1,4 +1,4 @@
-# GPS-BACK - Multi-Vendor GPS Device Management Platform
+# GPS-BACK - 多厂商GPS设备管理平台
 
 [![English](https://img.shields.io/badge/English-blue.svg)](README_EN.md)
 [![中文](https://img.shields.io/badge/中文-red.svg)](README.md)
@@ -7,19 +7,19 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen.svg)]()
 
-GPS-BACK is an enterprise-grade GPS device management and positioning service platform developed with Go, supporting multi-vendor device integration and providing complete functionality including device management, real-time positioning, track querying, and device control.
+GPS-BACK 是一个基于 Go 语言开发的企业级 GPS 设备管理和定位服务平台，支持多厂商设备接入，提供设备管理、实时定位、轨迹查询、设备控制等完整功能。
 
-## ✨ Key Features
+## ✨ 主要特性
 
-- 🔌 **Multi-Vendor Support**: Plugin architecture supporting BTT, V53 and other vendor devices
-- 📍 **Multiple Positioning Methods**: GPS, WiFi, LBS multi-level positioning technology
-- 🔄 **Real-time Communication**: WebSocket real-time data push
-- 📱 **WeChat Integration**: WeChat Mini Program login, WeChat Pay (to be improved)
-- 🔐 **Security Authentication**: JWT authentication + API Key dual protection
-- 📊 **Data Analysis**: Device track analysis, step counting
-- 🚨 **Alert System**: Device anomaly alerts, electronic fences
+- 🔌 **多厂商支持**: 插件化架构，支持 BTT、V53 等多种厂商设备
+- 📍 **多种定位方式**: GPS、WiFi、LBS 多重定位技术
+- 🔄 **实时通信**: WebSocket 实时数据推送
+- 📱 **微信集成**: 微信小程序登录、微信支付（待完善）
+- 🔐 **安全认证**: JWT 认证 + API Key 双重保护
+- 📊 **数据分析**: 设备轨迹分析、步数统计
+- 🚨 **告警系统**: 设备异常告警、电子围栏
 
-## 🏗️ System Architecture
+## 🏗️ 系统架构
 
 ```
 ┌─────────────────────────────────────────┐
@@ -27,13 +27,13 @@ GPS-BACK is an enterprise-grade GPS device management and positioning service pl
 │            (Gorilla Mux)                │
 ├─────────────────────────────────────────┤
 │              Handlers Layer             │
-│         (SimpleHandler + Middleware)    │
+│         (SimpleHandler + 中间件)         │
 ├─────────────────────────────────────────┤
 │             Services Layer              │
-│        (Business Logic + Service Container) │
+│        (业务逻辑 + 服务容器)              │
 ├─────────────────────────────────────────┤
 │               DAO Layer                 │
-│           (Data Access Objects)         │
+│           (数据访问对象)                  │
 ├─────────────────────────────────────────┤
 │             Database Layer              │
 │         (MySQL + TaosDB)                │
@@ -41,7 +41,7 @@ GPS-BACK is an enterprise-grade GPS device management and positioning service pl
 
            ┌─────────────────┐
            │  Vendor Drivers │
-           │   (Vendor Drivers) │
+           │   (厂商驱动)     │
            ├─────────────────┤
            │  BTT (MQTT)     │
            │  V53 (TCP)      │
@@ -49,64 +49,64 @@ GPS-BACK is an enterprise-grade GPS device management and positioning service pl
            └─────────────────┘
 ```
 
-## 🚀 Quick Start
+## 🚀 快速开始
 
-### Requirements
+### 环境要求
 
 - Go 1.24.0+
 - MySQL 8.0+
-- TaosDB 3.0+ (optional)
-- Redis (recommended)
+- TaosDB 3.0+ (可选)
+- Redis (推荐)
 
-### Installation
+### 安装部署
 
-1. **Clone the project**
+1. **克隆项目**
 ```bash
 git clone https://github.com/Daneel-Li/gps-back.git
 cd gps-back
 ```
 
-2. **Install dependencies**
+2. **安装依赖**
 ```bash
 go mod download
 ```
 
-3. **Configure database**
+3. **配置数据库**
 ```bash
-# Create database
+# 创建数据库
 mysql -u root -p < scripts/mysql.sql
 
-# If using TaosDB (optional)
+# 如果使用 TaosDB (可选)
 taos -s "source scripts/tdengine.sql"
 ```
 
-4. **Configuration file**
+4. **配置文件**
 ```bash
 cp config.json.example config.json
-# Edit config.json to configure database connection and other information
+# 编辑 config.json 配置数据库连接等信息
 ```
 
-5. **Generate certificate files**
+5. **生成证书文件**
 ```bash
-# Generate JWT private key
+# 生成 JWT 私钥
 openssl genpkey -algorithm RSA -out jwt_private.key -pkcs8
 
-# Generate HTTPS certificate (development environment)
+# 生成 HTTPS 证书 (开发环境)
 openssl req -x509 -newkey rsa:4096 -keyout privkey.pem -out fullchain.pem -days 365 -nodes
 ```
 
-6. **Start service**
+6. **启动服务**
 ```bash
 go run cmd/server/main.go
 ```
 
-Service will start at `https://localhost:8443`
+服务将在 `https://localhost:8443` 启动
 
-## 📖 API Documentation
+## 📖 API 文档
 
-### Authentication APIs
+### 认证接口
 
-#### WeChat Login
+#### 微信登录
 ```http
 POST /api/v1/login
 Content-Type: application/json
@@ -117,23 +117,23 @@ X-API-Key: your-api-key
 }
 ```
 
-### Device Management
+### 设备管理
 
-#### Get Device List
+#### 获取设备列表
 ```http
 GET /api/v1/devices
 Authorization: Bearer <jwt_token>
 X-API-Key: your-api-key
 ```
 
-#### Get Single Device
+#### 获取单个设备
 ```http
 GET /api/v1/devices/{device_id}
 Authorization: Bearer <jwt_token>
 X-API-Key: your-api-key
 ```
 
-#### Bind Device
+#### 绑定设备
 ```http
 POST /api/v1/assignments
 Authorization: Bearer <jwt_token>
@@ -143,29 +143,29 @@ Content-Type: application/json
 {
   "origin_sn": "device_serial_number",
   "device_type": "btt",
-  "label": "My Device"
+  "label": "我的设备"
 }
 ```
 
-#### Unbind Device
+#### 解绑设备
 ```http
 DELETE /api/v1/assignments/{device_id}
 Authorization: Bearer <jwt_token>
 X-API-Key: your-api-key
 ```
 
-### Track Query
+### 轨迹查询
 
-#### Get Device Track
+#### 获取设备轨迹
 ```http
 GET /api/v1/devices/{device_id}/track?startTime=2024-01-01 00:00:00&endTime=2024-01-01 23:59:59
 Authorization: Bearer <jwt_token>
 X-API-Key: your-api-key
 ```
 
-### Device Control
+### 设备控制
 
-#### Send Device Command
+#### 发送设备指令
 ```http
 PUT /api/v1/devices/{device_id}/command
 Authorization: Bearer <jwt_token>
@@ -178,25 +178,25 @@ Content-Type: application/json
 }
 ```
 
-Supported commands:
-- `locate`: Immediate positioning
-- `reboot`: Remote restart
-- `find`: Find device
-- `set_interval`: Set reporting interval
+支持的指令：
+- `locate`: 立即定位
+- `reboot`: 远程重启
+- `find`: 寻找设备
+- `set_interval`: 设置上报间隔
 
-### WebSocket Connection
+### WebSocket 连接
 
 ```javascript
 const ws = new WebSocket('wss://your-domain:8443/ws');
 ws.onmessage = function(event) {
   const data = JSON.parse(event.data);
-  console.log('Real-time data:', data);
+  console.log('实时数据:', data);
 };
 ```
 
-## 🔧 Configuration
+## 🔧 配置说明
 
-### config.json Configuration File
+### config.json 配置文件
 
 ```json
 {
@@ -224,17 +224,17 @@ ws.onmessage = function(event) {
 }
 ```
 
-### Environment Variables
+### 环境变量
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `CONFIG_PATH` | Configuration file path | `./config.json` |
-| `LOG_LEVEL` | Log level | `INFO` |
-| `SERVER_PORT` | Service port | `8443` |
+| 变量名 | 说明 | 默认值 |
+|--------|------|--------|
+| `CONFIG_PATH` | 配置文件路径 | `./config.json` |
+| `LOG_LEVEL` | 日志级别 | `INFO` |
+| `SERVER_PORT` | 服务端口 | `8443` |
 
-## 🔌 Vendor Driver Development
+## 🔌 厂商驱动开发
 
-### Implement VendorDriver Interface
+### 实现 VendorDriver 接口
 
 ```go
 type VendorDriver interface {
@@ -250,72 +250,72 @@ type VendorDriver interface {
 }
 ```
 
-### Register Driver
+### 注册驱动
 
 ```go
-// Register in initVendorDrivers function
+// 在 initVendorDrivers 函数中注册
 yourDriver := yourvendor.NewHandler(config)
 serviceContainer.RegisterDriver("your_vendor", yourDriver)
 ```
 
-## 📊 Database Design
+## 📊 数据库设计
 
-### Main Data Tables
+### 主要数据表
 
-- `users` - User information
-- `devices` - Device main table
-- `device_his_data_*` - Device historical data (table per device)
-- `device_his_pos_*` - Position track data (table per device)
-- `orders` - Order management
+- `users` - 用户信息
+- `devices` - 设备主表
+- `device_his_data_*` - 设备历史数据 (按设备分表)
+- `device_his_pos_*` - 位置轨迹数据 (按设备分表)
+- `orders` - 订单管理
 
-Detailed database structure please refer to `scripts/mysql.sql`
+详细的数据库结构请参考 `scripts/mysql.sql`
 
-## 🧪 Testing
+## 🧪 测试
 
-### Run Unit Tests
+### 运行单元测试
 ```bash
 go test ./...
 ```
 
-### Run Integration Tests
+### 运行集成测试
 ```bash
 go test -tags=integration ./...
 ```
 
-### Test Tools
+### 测试工具
 
-The project provides multiple test tools:
+项目提供了多个测试工具：
 
 ```bash
-# MQTT connection test
+# MQTT 连接测试
 go run cmd/testMqtt/main.go
 
-# JT808 protocol test
+# JT808 协议测试
 go run cmd/test_jt808/main.go
 
-# TaosDB connection test
+# TaosDB 连接测试
 go run cmd/testTao/main.go
 ```
 
-## 📈 Performance Optimization
+## 📈 性能优化
 
-### Database Optimization
-- Use connection pool to manage database connections
-- Store historical data by device in separate tables
-- Index optimization for query performance
+### 数据库优化
+- 使用连接池管理数据库连接
+- 按设备分表存储历史数据
+- 索引优化查询性能
 
-### Cache Strategy
-- Local cache to reduce duplicate calculations
-- WiFi positioning result cache
-- Geocoding result cache
+### 缓存策略
+- 本地缓存减少重复计算
+- WiFi 定位结果缓存
+- 地理编码结果缓存
 
-### Concurrent Processing
-- Multiple goroutines to handle device messages
-- Asynchronous processing of non-critical business logic
+### 并发处理
+- 多 goroutine 处理设备消息
+- 异步处理非关键业务逻辑
 
-## 🚀 Deployment Guide
+## 🚀 部署指南
 
-### Docker Deployment
+### Docker 部署
 
 ```dockerfile
 FROM golang:1.24-alpine AS builder
@@ -332,7 +332,7 @@ COPY --from=builder /app/config.json .
 CMD ["./gps-back"]
 ```
 
-### Using Docker Compose
+### 使用 Docker Compose
 
 ```yaml
 version: '3.8'
@@ -363,34 +363,34 @@ volumes:
   mysql_data:
 ```
 
-### Production Deployment
+### 生产环境部署
 
-1. **Use reverse proxy** (Nginx/Caddy)
-2. **Configure HTTPS certificates** (Let's Encrypt)
-3. **Set up monitoring and logging** (Prometheus + Grafana)
-4. **Database backup strategy**
-5. **Load balancing** (multi-instance deployment)
+1. **使用反向代理** (Nginx/Caddy)
+2. **配置 HTTPS 证书** (Let's Encrypt)
+3. **设置监控和日志** (Prometheus + Grafana)
+4. **数据库备份策略**
+5. **负载均衡** (多实例部署)
 
-## 🤝 Contributing
+## 🤝 贡献指南
 
-We welcome all forms of contributions!
+我们欢迎所有形式的贡献！
 
-### Development Workflow
+### 开发流程
 
-1. Fork the project
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Create a Pull Request
+1. Fork 项目
+2. 创建特性分支 (`git checkout -b feature/amazing-feature`)
+3. 提交更改 (`git commit -m 'Add amazing feature'`)
+4. 推送到分支 (`git push origin feature/amazing-feature`)
+5. 创建 Pull Request
 
-### Code Standards
+### 代码规范
 
-- Follow Go official code standards
-- Use `gofmt` to format code
-- Add necessary comments and documentation
-- Write unit tests
+- 遵循 Go 官方代码规范
+- 使用 `gofmt` 格式化代码
+- 添加必要的注释和文档
+- 编写单元测试
 
-### Commit Message Format
+### 提交信息格式
 
 ```
 type(scope): description
@@ -400,41 +400,41 @@ type(scope): description
 [optional footer]
 ```
 
-Types:
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation update
-- `style`: Code formatting adjustment
-- `refactor`: Code refactoring
-- `test`: Test related
-- `chore`: Build or auxiliary tool changes
+类型：
+- `feat`: 新功能
+- `fix`: 修复 bug
+- `docs`: 文档更新
+- `style`: 代码格式调整
+- `refactor`: 代码重构
+- `test`: 测试相关
+- `chore`: 构建或辅助工具的变动
 
-## 📄 License
+## 📄 许可证
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
+本项目采用 MIT 许可证 - 详情请参阅 [LICENSE](LICENSE) 文件
 
-## 🙏 Acknowledgments
+## 🙏 致谢
 
-- [Gorilla Mux](https://github.com/gorilla/mux) - HTTP router
-- [GORM](https://gorm.io/) - Go ORM library
-- [Paho MQTT](https://github.com/eclipse/paho.mqtt.golang) - MQTT client
-- [JWT-Go](https://github.com/dgrijalva/jwt-go) - JWT implementation
+- [Gorilla Mux](https://github.com/gorilla/mux) - HTTP 路由
+- [GORM](https://gorm.io/) - Go ORM 库
+- [Paho MQTT](https://github.com/eclipse/paho.mqtt.golang) - MQTT 客户端
+- [JWT-Go](https://github.com/dgrijalva/jwt-go) - JWT 实现
 
-## 📞 Contact Us
+## 📞 联系我们
 
-- Project homepage: https://github.com/Daneel-Li/gps-back
-- Issue feedback: https://github.com/Daneel-Li/gps-back/issues
-- Email: shengda.lsd@gmail.com
+- 项目主页: https://github.com/Daneel-Li/gps-back
+- 问题反馈: https://github.com/Daneel-Li/gps-back/issues
+- 邮箱: shengda.lsd@gmail.com
 
-## 🗺️ Roadmap
+## 🗺️ 路线图
 
-- [ ] Support more vendor device protocols
-- [ ] Mobile SDK development
-- [ ] Data visualization dashboard
-- [ ] AI track analysis
-- [ ] Microservice architecture refactoring
-- [ ] Internationalization support
+- [ ] 支持更多厂商设备协议
+- [ ] 移动端 SDK 开发
+- [ ] 数据可视化大屏
+- [ ] AI 轨迹分析
+- [ ] 微服务架构重构
+- [ ] 国际化支持
 
 ---
 
-If this project helps you, please give us a ⭐️ Star!
+如果这个项目对你有帮助，请给我们一个 ⭐️ Star！

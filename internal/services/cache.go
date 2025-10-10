@@ -8,25 +8,25 @@ import (
 	"time"
 )
 
-type shard struct { //缓存分片
+type shard struct { // Cache shard
 	mu       sync.RWMutex
 	Items    map[string]interface{}
 	filepath string
-	updated  bool //是否更新过
+	updated  bool // Whether updated
 }
 
 type LocalCache interface {
 	Set(key string, value interface{})
 	Get(key string) (interface{}, bool)
 
-	//TODO 改成任意多级key
+	//TODO Change to arbitrary multi-level keys
 	GetCache(class string, key string) (interface{}, bool)
 	SetCache(class string, key string, value interface{})
 }
 
 /*
 *
-如果filepath 为空，则该缓存不具备硬盘序列化能力
+If filepath is empty, this cache does not have disk serialization capability
 */
 func NewLocalCache(filepath string) LocalCache {
 	gob.Register(shard{})
@@ -36,23 +36,23 @@ func NewLocalCache(filepath string) LocalCache {
 	}
 	if filepath != "" {
 		s.filepath = filepath
-		if err := s.loadCacheFromFile(filepath); err != nil { //使用新型结构读取不成功，用旧结构读取
-			slog.Info("序列化缓存失败，尝试旧结构", "error", err)
+		if err := s.loadCacheFromFile(filepath); err != nil { // New structure read failed, try old structure
+			slog.Info("Cache serialization failed, trying old structure", "error", err)
 			if err := s.loadCacheFromJSON(); err != nil {
-				slog.Info("旧结构序列化缓存也失败,返回空缓存", "error", err)
+				slog.Info("Old structure cache serialization also failed, returning empty cache", "error", err)
 			} else {
-				slog.Info("使用旧结构序列化缓存成功")
+				slog.Info("Successfully used old structure cache serialization")
 			}
 		}
 		s.toPointer(true)
 	}
 
-	go func() { //定时存储文件
+	go func() { // Timed file storage
 		if s.filepath == "" {
 			return
 		}
 		for {
-			<-time.After(time.Second * 10) //10 秒保存一次
+			<-time.After(time.Second * 10) // Save every 10 seconds
 			s.saveCacheToFile()
 		}
 	}()
@@ -74,12 +74,12 @@ func RegisterStruct(s interface{}) {
 	gob.Register(s)
 }
 
-// 自定义解码函数
+// Custom decode function
 func (s *shard) loadCacheFromJSON() error {
 
-	// 方法1：使用ioutil.ReadFile (Go 1.15及更早版本)
+	// Method 1: Use ioutil.ReadFile (Go 1.15 and earlier versions)
 
-	// 先解码到临时类型
+	// First decode to temporary type
 	var temp map[string]map[string]interface{}
 	file, _ := os.Open(s.filepath)
 	defer file.Close()
@@ -87,7 +87,7 @@ func (s *shard) loadCacheFromJSON() error {
 		return err
 	}
 
-	// 转换为目标类型
+	// Convert to target type
 	for key, itemMap := range temp {
 		shard := &shard{
 			Items: make(map[string]interface{}),
@@ -101,7 +101,7 @@ func (s *shard) loadCacheFromJSON() error {
 	return nil
 }
 
-// 从文件加载缓存数据
+// Load cache data from file
 func (s *shard) loadCacheFromFile(filepath string) error {
 
 	file, _ := os.Open(filepath)
@@ -109,7 +109,7 @@ func (s *shard) loadCacheFromFile(filepath string) error {
 	err := gob.NewDecoder(file).Decode(s)
 	if err != nil {
 		if !os.IsNotExist(err) {
-			slog.Info("读取缓存文件失败", "error", err)
+			slog.Info("Failed to read cache file", "error", err)
 		}
 
 		return err
@@ -117,14 +117,14 @@ func (s *shard) loadCacheFromFile(filepath string) error {
 	return nil
 }
 
-// 将缓存数据转换为指针类型，方便序列化
+// Convert cache data to pointer type for easy serialization
 func (s *shard) toPointer(recursive bool) *shard {
 	if recursive {
 		for k, v := range s.Items {
 			if ss, ok := v.(shard); ok {
 				s.Set(k, ss.toPointer(recursive))
 			}
-			// else { //其它结构体就不递归了，由用户自行处理
+			// else { // Other structs are not recursive, handled by user
 			// 	val := reflect.ValueOf(v)
 			// 	if val.Kind() == reflect.Struct {
 			// 		ptr := reflect.New(val.Type())
@@ -137,11 +137,11 @@ func (s *shard) toPointer(recursive bool) *shard {
 	return s
 }
 
-// 保存缓存到文件
+// Save cache to file
 func (s *shard) saveCacheToFile() {
-	// 此处使用写锁而非读锁，是因为如果用读锁，其它写成可能读取内容，
-	// 用户有可能存的是指针，拿到指针后对指针内容进行修改也会修改到缓存内容，
-	// 而gob序列化时，会修改指针指向的内容而非指针，从而产生冲突
+	// Use write lock instead of read lock here, because if read lock is used, other writes may read content,
+	// User might store pointers, and modifying pointer content after getting pointer will also modify cache content,
+	// When gob serializes, it modifies the content pointed by pointer instead of pointer itself, causing conflicts
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if !s.updated {
@@ -150,16 +150,16 @@ func (s *shard) saveCacheToFile() {
 	defer func() {
 		s.updated = false
 	}()
-	slog.Debug("保存cache缓存到文件", "filepath", s.filepath)
-	//使用写锁也并不能完全杜绝上述冲突，只是减少。少数情况还是会冲突，例如用户如果有某个很长时间的操作，
-	//在本写锁获取之前它就获取了指针，并在之后比较长一段时间内也在对该指针进行操作
-	// TODO 后续改成redis即可，无需过度设计
+	slog.Debug("Save cache to file", "filepath", s.filepath)
+	// Using write lock cannot completely eliminate the above conflicts, just reduce them. Few cases will still conflict, for example if user has a very long operation,
+	// It gets the pointer before this write lock is acquired, and continues to operate on that pointer for a relatively long time afterwards
+	// TODO Change to redis later, no need to over-design
 
 	file, _ := os.Create(s.filepath)
 	defer file.Close()
 	err := gob.NewEncoder(file).Encode(s)
 	if err != nil {
-		slog.Error("序列化缓存失败", "error", err)
+		slog.Error("Cache serialization failed", "error", err)
 		return
 	}
 
@@ -185,7 +185,7 @@ func (s *shard) SetCache(class string, key string, value interface{}) {
 	s.updated = true
 }
 
-// TODO： 后期引入redis等缓存工具
+// TODO: Introduce redis and other cache tools later
 func (s *shard) GetCache(class string, key string) (interface{}, bool) {
 	var ss *shard = s.GetSubCache(class)
 	return ss.Get(key)

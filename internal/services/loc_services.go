@@ -21,29 +21,29 @@ import (
 	"golang.org/x/time/rate"
 )
 
-// LocationService 位置服务接口
+// LocationService location service interface
 type LocationService interface {
-	// LocateByNetwork 通过网络信息进行定位
+	// LocateByNetwork locate by network information
 	LocateByNetwork(params LocationRequest, timeout time.Duration) (*LocationResult, error)
 
-	// Geocode 逆地址解析
+	// Geocode reverse geocoding
 	Geocode(latitude, longitude float64, timeout time.Duration) (*GeoCoderResult, error)
 }
 
-// txLocationService 腾讯地图位置服务实现
+// txLocationService Tencent Map location service implementation
 type txLocationService struct{}
 
-// NewTxLocationService 创建腾讯地图位置服务
+// NewTxLocationService creates Tencent Map location service
 func NewTxLocationService() *txLocationService {
 	return &txLocationService{}
 }
 
-// LocateByNetwork 通过网络信息进行定位
+// LocateByNetwork locate by network information
 func (s *txLocationService) LocateByNetwork(params LocationRequest, timeout time.Duration) (*LocationResult, error) {
 	return txLocNetwork(params, timeout)
 }
 
-// Geocode 逆地址解析
+// Geocode reverse geocoding
 func (s *txLocationService) Geocode(latitude, longitude float64, timeout time.Duration) (*GeoCoderResult, error) {
 	return txGeocoder(latitude, longitude, timeout)
 }
@@ -57,13 +57,13 @@ const (
 	_TX_GEOCODER = "https://apis.map.qq.com/ws/geocoder/v1/"
 )
 
-// TODO 看是否需要封装
+// TODO check if encapsulation is needed
 var (
 	goPool            gopool.Pool
-	txLocNetLimiter   *rate.Limiter // tx 的融合定位限流器，官网免费qps为5
-	txGeocoderLimiter *rate.Limiter // tx 的逆地址解析限流器，官网免费qps为100
+	txLocNetLimiter   *rate.Limiter // tx fusion location limiter, official free qps is 5
+	txGeocoderLimiter *rate.Limiter // tx reverse geocoding limiter, official free qps is 100
 	once              sync.Once
-	wzLocNetLimiter   *rate.Limiter // wz 的融合定位限流器，免费qps为1
+	wzLocNetLimiter   *rate.Limiter // wz fusion location limiter, free qps is 1
 )
 
 func InitService() {
@@ -75,7 +75,7 @@ func InitService() {
 	initGoPool()
 }
 
-// 允许用户手动刷新配置
+// Allow users to manually refresh configuration
 func initWzService() {
 	maxLocNet := config.GetConfig().WzLocNetMaxConCurrent
 	if maxLocNet < 1 {
@@ -100,8 +100,8 @@ func initTxService() {
 		maxGeoCoder = 100
 	}
 
-	txGeocoderLimiter = rate.NewLimiter(rate.Limit(maxGeoCoder), int(maxGeoCoder)) //每秒产生100个令牌，桶的大小为100
-	txLocNetLimiter = rate.NewLimiter(rate.Limit(maxLocNet), int(maxLocNet))       //每秒产生maxC个令牌，桶的大小为maxC
+	txGeocoderLimiter = rate.NewLimiter(rate.Limit(maxGeoCoder), int(maxGeoCoder)) // Generate 100 tokens per second, bucket size is 100
+	txLocNetLimiter = rate.NewLimiter(rate.Limit(maxLocNet), int(maxLocNet))       // Generate maxC tokens per second, bucket size is maxC
 }
 
 func getTxMapApiKey() string {
@@ -120,13 +120,13 @@ Header：Content-Type:application/json
 */
 
 func getTXMapApiResponse(body []byte) (*TxApiResponse, error) {
-	// 解析响应数据到 Response 结构体
+	// Parse response data to Response struct
 	var response TxApiResponse
 	if err := json.Unmarshal(body, &response); err != nil {
 		return nil, err
 	}
 
-	// 检查状态码
+	// Check status code
 	if response.Status != 0 {
 		return nil, fmt.Errorf("error occurred: %s", response.Message)
 	}
@@ -137,7 +137,7 @@ func callService(body any, args url.Values, url string, method string, timeout t
 	if goPool == nil {
 		panic("you shuold invoke InitService() first")
 	}
-	// 将请求参数编码为 JSON
+	// Encode request parameters to JSON
 	var bodyRaw []byte
 	var err error
 	if body != nil {
@@ -150,14 +150,14 @@ func callService(body any, args url.Values, url string, method string, timeout t
 	if len(args) > 0 {
 		url = url + "?" + args.Encode()
 	}
-	// 创建一个 HTTP POST 请求
+	// Create an HTTP POST request
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(bodyRaw))
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	// 发送请求并获取响应
+	// Send request and get response
 	client := &http.Client{}
 
 	ch1 := make(chan *http.Response)
@@ -259,12 +259,12 @@ func NewWzLocationService() *wzLocationService {
 	return &wzLocationService{}
 }
 
-// LocateByNetwork 通过网络信息进行定位
+// LocateByNetwork locate by network information
 func (s *wzLocationService) LocateByNetwork(params LocationRequest, timeout time.Duration) (*LocationResult, error) {
 	return wzLocNetwork(params, timeout)
 }
 
-// Geocode 逆地址解析
+// Geocode reverse geocoding
 func (s *wzLocationService) Geocode(latitude, longitude float64, timeout time.Duration) (*GeoCoderResult, error) {
 	return wz_Geocoder(latitude, longitude, timeout)
 }
