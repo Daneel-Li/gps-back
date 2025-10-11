@@ -1,7 +1,7 @@
 # GPS-BACK - 多厂商GPS设备管理平台
 
-[![English](https://img.shields.io/badge/English-blue.svg)](README_EN.md)
-[![中文](https://img.shields.io/badge/中文-red.svg)](README.md)
+[![English](https://img.shields.io/badge/English-blue.svg)](README.md)
+[![中文](https://img.shields.io/badge/中文-red.svg)](README_ZN.md)
 
 [![Go Version](https://img.shields.io/badge/Go-1.24.0-blue.svg)](https://golang.org)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
